@@ -1,41 +1,43 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -ImyTerm -Isrc
-LIB_DIR = myTerm
-SRC_DIR = src
-CONSOLE_DIR = console
-BIN_DIR = bin
+CFLAGS = -Wall -Wextra -std=c11
+INCLUDES = -ImyTerm -Isrc -ImyBigChars
+LIBS = -LmyTerm -lmyTerm -LmyBigChars -lmyBigChars -Lsrc -lmySimpleComputer -lm
 
-all: $(BIN_DIR)/console
+# Объектные файлы
+MYTERM_OBJ = myTerm/myTerm.o
+MYBIGCHARS_OBJ = myBigChars/myBigChars.o
+SRC_OBJ = src/memory.o src/registers.o src/commands.o src/io.o
 
-# Создаем директорию bin, если она не существует
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+# Цели
+all: myTerm/libmyTerm.a myBigChars/libmyBigChars.a src/libmySimpleComputer.a bin/console bin/font
 
-$(BIN_DIR)/console: $(CONSOLE_DIR)/main.c $(LIB_DIR)/libmyTerm.a $(SRC_DIR)/libmySimpleComputer.a | $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $@ $< -L$(LIB_DIR) -lmyTerm -L$(SRC_DIR) -lmySimpleComputer
-
-$(LIB_DIR)/libmyTerm.a: $(LIB_DIR)/myTerm.o
-	ar rcs $@ $<
-
-$(LIB_DIR)/myTerm.o: $(LIB_DIR)/myTerm.c $(LIB_DIR)/myTerm.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-$(SRC_DIR)/libmySimpleComputer.a: $(SRC_DIR)/memory.o $(SRC_DIR)/registers.o $(SRC_DIR)/commands.o $(SRC_DIR)/io.o
+# Сборка библиотеки myTerm
+myTerm/libmyTerm.a: $(MYTERM_OBJ)
 	ar rcs $@ $^
 
-$(SRC_DIR)/memory.o: $(SRC_DIR)/memory.c $(SRC_DIR)/memory.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+# Сборка библиотеки myBigChars
+myBigChars/libmyBigChars.a: $(MYBIGCHARS_OBJ)
+	ar rcs $@ $^
 
-$(SRC_DIR)/registers.o: $(SRC_DIR)/registers.c $(SRC_DIR)/registers.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+# Сборка библиотеки mySimpleComputer
+src/libmySimpleComputer.a: $(SRC_OBJ)
+	ar rcs $@ $^
 
-$(SRC_DIR)/commands.o: $(SRC_DIR)/commands.c $(SRC_DIR)/commands.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+# Сборка консольного приложения
+bin/console: console/main.c myTerm/libmyTerm.a myBigChars/libmyBigChars.a src/libmySimpleComputer.a $(SRC_OBJ) $(MYTERM_OBJ) $(MYBIGCHARS_OBJ)
+	mkdir -p bin
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ console/main.c $(SRC_OBJ) $(MYTERM_OBJ) $(MYBIGCHARS_OBJ) myTerm/libmyTerm.a myBigChars/libmyBigChars.a src/libmySimpleComputer.a
 
-$(SRC_DIR)/io.o: $(SRC_DIR)/io.c $(SRC_DIR)/io.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+# Сборка программы font
+bin/font: console/font.c myTerm/libmyTerm.a myBigChars/libmyBigChars.a src/libmySimpleComputer.a $(SRC_OBJ) $(MYTERM_OBJ) $(MYBIGCHARS_OBJ)
+	mkdir -p bin
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ console/font.c $(SRC_OBJ) $(MYTERM_OBJ) $(MYBIGCHARS_OBJ) myTerm/libmyTerm.a myBigChars/libmyBigChars.a src/libmySimpleComputer.a
 
+# Компиляция объектных файлов
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+
+# Очистка
 clean:
-	rm -rf $(BIN_DIR) $(LIB_DIR)/*.o $(LIB_DIR)/*.a $(SRC_DIR)/*.o $(SRC_DIR)/*.a
-
-.PHONY: all clean
+	rm -f $(MYTERM_OBJ) $(MYBIGCHARS_OBJ) $(SRC_OBJ) myTerm/libmyTerm.a myBigChars/libmyBigChars.a src/libmySimpleComputer.a bin/console bin/font
+	rm -rf bin

@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "registers.h"
 #include "myTerm.h"
+#include "myBigChars.h"
 #include <stddef.h>
 #include <stdio.h>
 
@@ -68,4 +69,21 @@ void printCounters(void) {
         mt_gotoXY(50, 12);
         printf("Error: icounter get\n");
     }
+}
+
+void printBigCell(int address, enum colors fg, enum colors bg) {
+    int val;
+    if (sc_memoryGet(address, &val)) {
+        printf("Invalid address: %d\n", address);
+        return;
+    }
+
+    int big[2] = {0};
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            bc_setbigcharpos(big, i, j, (val >> (i * 8 + j)) & 1);
+        }
+    }
+
+    bc_printbigchar(big, 10, 40, fg, bg);
 }

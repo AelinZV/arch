@@ -8,5 +8,6 @@ void printFlags(void);
 void printDecodedCommand(int value);
 void printAccumulator(void);
 void printCounters(void);
+void printBigCell(int address, enum colors fg, enum colors bg);
 
 #endif // IO_H
