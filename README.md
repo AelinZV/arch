@@ -30,3 +30,8 @@
 Для сборки проекта выполните команду:
 ```bash
 make
+cd bin
+./console
+./font
+cd ..
+bash test_terminal.sh
